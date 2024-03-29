@@ -14,23 +14,44 @@ import argparse
 from pathlib import Path
 import pprint
 import time
-import json
 
 from openai import OpenAI
 
 
-def show_json(obj):
-    print(json.loads(obj.model_dump_json()))
+def pretty_print(messages):
+    print("# Messages")
+    for m in messages:
+        print(f"{m.role}: {m.content[0].text.value}")
+    print()
 
 
-def wait_on_run(client, run, thread):
+def submit_message(client, assistant_id, thread, user_message):
+    client.beta.threads.messages.create(
+        thread_id=thread.id, role="user", content=user_message
+    )
+    return client.beta.threads.runs.create(
+        thread_id=thread.id,
+        assistant_id=assistant_id,
+    )
+
+def get_response(client, thread):
+    return client.beta.threads.messages.list(thread_id=thread.id, order="asc")
+
+
+def create_thread_and_run(client, assistant_id, user_input):
+    thread = client.beta.threads.create()
+    run = submit_message(client, assistant_id, thread, user_input)
+    return thread, run
+
+
+def wait_on_run(client, run, thread, delay=0.5):
     while run.status == "queued" or run.status == "in_progress":
         print(f'{run.status}')
         run = client.beta.threads.runs.retrieve(
             thread_id=thread.id,
             run_id=run.id,
         )
-        time.sleep(0.5)
+        time.sleep(delay)
     return run
 
 
@@ -57,24 +78,9 @@ def main(arguments):
     assistant = client.beta.assistants.retrieve(
         assistant_id=assistants[args.name].id)
 
-    thread = client.beta.threads.create()
-    message = client.beta.threads.messages.create(
-        thread_id=thread.id,
-        role='user',
-        content=args.question,
-    )
-
-    run = client.beta.threads.runs.create(
-        thread_id=thread.id,
-        assistant_id=assistant.id,
-    )
-
+    thread, run = create_thread_and_run(client, assistant.id, args.question)
     run = wait_on_run(client, run, thread)
-
-    messages = client.beta.threads.messages.list(
-        thread_id=thread.id, order="asc", after=message.id
-    )
-    show_json(messages)
+    pretty_print(get_response(client, thread))
 
 
 if __name__ == '__main__':
