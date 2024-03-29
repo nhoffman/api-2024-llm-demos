@@ -3,6 +3,8 @@
 """Create an OpenAI assistant
 
 https://platform.openai.com/docs/assistants/tools/knowledge-retrieval
+
+Requires the OPENAI_API_KEY environment variable to be set.
 """
 
 import os

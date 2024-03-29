@@ -6,6 +6,9 @@ https://platform.openai.com/docs/assistants/tools/knowledge-retrieval
 https://cookbook.openai.com/examples/assistants_api_overview_python
 
 Requires the OPENAI_API_KEY environment variable to be set.
+
+TODO: streaming.
+See https://medium.com/@hawkflow.ai/openai-streaming-assistants-example-77e53ca18fb4
 """
 
 import os
