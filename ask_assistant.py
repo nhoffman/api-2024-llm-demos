@@ -21,11 +21,10 @@ import time
 from openai import OpenAI
 
 
-def pretty_print(messages):
-    print("# Messages")
-    for m in messages:
-        print(f"{m.role}: {m.content[0].text.value}")
-    print()
+def create_thread_and_run(client, assistant_id, user_input):
+    thread = client.beta.threads.create()
+    run = submit_message(client, assistant_id, thread, user_input)
+    return thread, run
 
 
 def submit_message(client, assistant_id, thread, user_message):
@@ -37,15 +36,6 @@ def submit_message(client, assistant_id, thread, user_message):
         assistant_id=assistant_id,
     )
 
-def get_response(client, thread):
-    return client.beta.threads.messages.list(thread_id=thread.id, order="asc")
-
-
-def create_thread_and_run(client, assistant_id, user_input):
-    thread = client.beta.threads.create()
-    run = submit_message(client, assistant_id, thread, user_input)
-    return thread, run
-
 
 def wait_on_run(client, run, thread, delay=0.5):
     while run.status == "queued" or run.status == "in_progress":
@@ -56,6 +46,17 @@ def wait_on_run(client, run, thread, delay=0.5):
         )
         time.sleep(delay)
     return run
+
+
+def get_response(client, thread):
+    return client.beta.threads.messages.list(thread_id=thread.id, order="asc")
+
+
+def pretty_print(messages):
+    print("# Messages")
+    for m in messages:
+        print(f"{m.role}: {m.content[0].text.value}")
+    print()
 
 
 def main(arguments):
@@ -71,6 +72,11 @@ def main(arguments):
 
     args = parser.parse_args(arguments)
     client = OpenAI()
+
+    # help(client.beta.threads.create)
+    # help(client.beta.threads.messages.create)
+    help(client.beta.threads.runs.create)
+    return
 
     assistants = {a.name: a for a in client.beta.assistants.list()}
     if args.name is None or args.question is None:
