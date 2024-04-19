@@ -2,3 +2,6 @@ openai
 pandas
 jinja2
 lxml
+jupyterlab
+jupyter-ai
+langchain_openai
